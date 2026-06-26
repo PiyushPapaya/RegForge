@@ -1,0 +1,4 @@
+# Keep golden fixtures and generated C byte-stable across platforms
+tests/fixtures/* text eol=lf
+*.h text eol=lf
+*.c text eol=lf

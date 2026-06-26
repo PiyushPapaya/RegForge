@@ -1,0 +1,13 @@
+{
+  "device": { "name": "BMI270", "vendor": "Bosch", "bus": "I2C", "i2c_addresses": ["0x68"], "word_size_bits": 8 },
+  "registers": [
+    { "name": "CHIP_ID", "address": "0x00", "access": "RO", "reset_value": "0x24", "description": "Chip identifier", "source": { "page": 30, "section": "5.2" }, "fields": [] },
+    { "name": "PWR_CTRL", "address": "0x7D", "access": "RW", "reset_value": "0x00", "description": "Enables sensors", "source": { "page": 42, "section": "5.3.16" },
+      "fields": [
+        { "name": "acc_en", "bits": "2", "access": "RW", "reset": "0", "description": "Accelerometer enable" },
+        { "name": "gyr_en", "bits": "1", "access": "RW", "reset": "0", "description": "Gyroscope enable" }
+      ] }
+  ],
+  "init_hints": ["Soft reset via CMD=0xB6"],
+  "device_detected": true
+}
