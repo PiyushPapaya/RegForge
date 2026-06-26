@@ -1,5 +1,6 @@
 import type { RegisterMap } from "@/lib/schema/registerMap";
 import { maskFor, shiftFor } from "@/lib/generate/hex";
+import { sanitizeComment, sanitizeIdent } from "@/lib/generate/sanitize";
 
 export function generateHeader(map: RegisterMap): string {
   const dev = map.device.name.toUpperCase().replace(/[^A-Z0-9]/g, "_");
@@ -9,10 +10,10 @@ export function generateHeader(map: RegisterMap): string {
   lines.push(`#define ${dev}_REGS_H`);
   lines.push("");
   for (const r of map.registers) {
-    lines.push(`/* ${r.name} @ ${r.address} (${r.access}) reset=${r.reset_value} - ${r.description} */`);
-    lines.push(`#define ${dev}_${r.name.toUpperCase()} ${r.address}`);
+    lines.push(`/* ${sanitizeComment(r.name)} @ ${r.address} (${r.access}) reset=${r.reset_value} - ${sanitizeComment(r.description)} */`);
+    lines.push(`#define ${dev}_${sanitizeIdent(r.name.toUpperCase())} ${r.address}`);
     for (const f of r.fields) {
-      const base = `${dev}_${r.name.toUpperCase()}_${f.name.toUpperCase()}`;
+      const base = `${dev}_${sanitizeIdent(r.name.toUpperCase())}_${sanitizeIdent(f.name.toUpperCase())}`;
       lines.push(`#define ${base}_MASK ${maskFor(f.bits)}`);
       lines.push(`#define ${base}_SHIFT ${shiftFor(f.bits)}`);
     }

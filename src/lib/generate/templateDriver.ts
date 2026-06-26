@@ -1,4 +1,5 @@
 import type { RegisterMap } from "@/lib/schema/registerMap";
+import { sanitizeComment } from "@/lib/generate/sanitize";
 
 export interface DriverOutput { c: string; h: string; }
 
@@ -31,7 +32,7 @@ export function generateDriver(map: RegisterMap): DriverOutput {
   c.push(`int ${slug}_init(void) {`);
   c.push(`    /* TODO: RegForge fills the ordered init sequence here (see Init Sequence panel). */`);
   for (const r of rw) {
-    c.push(`    /* configure ${r.name} (${r.address}) */`);
+    c.push(`    /* configure ${sanitizeComment(r.name)} (${r.address}) */`);
   }
   c.push(`    return 0;`);
   c.push(`}`, "");
