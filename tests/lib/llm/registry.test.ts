@@ -20,7 +20,6 @@ describe("resolveProvider", () => {
     expect(() => resolveProvider({ provider: "gemini" })).toThrow(ProviderError);
   });
   it("throws on unknown provider", () => {
-    // @ts-expect-error testing runtime guard
     expect(() => resolveProvider({ provider: "bogus", apiKey: "x" })).toThrow(ProviderError);
   });
   it("defaults to anthropic when provider omitted", () => {

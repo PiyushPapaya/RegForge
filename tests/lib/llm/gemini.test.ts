@@ -14,7 +14,9 @@ describe("GeminiProvider", () => {
     expect(out).toBe("HELLO");
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toContain("gemini-2.5-flash:generateContent");
-    expect(String(url)).toContain("key=KEY123");
+    // Key must travel in a header, not the URL (no secrets in URLs).
+    expect(String(url)).not.toContain("KEY123");
+    expect((init as RequestInit).headers).toMatchObject({ "x-goog-api-key": "KEY123" });
     const body = JSON.parse((init as RequestInit).body as string);
     const parts = body.contents[0].parts;
     expect(parts.some((x: any) => x.inline_data?.mime_type === "application/pdf")).toBe(true);

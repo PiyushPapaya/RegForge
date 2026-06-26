@@ -11,10 +11,11 @@ export class GeminiProvider implements LLMProvider {
   constructor(private key: string, private fetchFn: FetchFn = fetch) {}
 
   private async call(parts: unknown[]): Promise<string> {
-    const url = `${BASE}/${MODEL}:generateContent?key=${this.key}`;
+    const url = `${BASE}/${MODEL}:generateContent`;
     const res = await this.fetchFn(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // Key goes in a header, never the URL — keeps it out of proxy/server logs.
+      headers: { "Content-Type": "application/json", "x-goog-api-key": this.key },
       body: JSON.stringify({ contents: [{ parts }] }),
     });
     if (!res.ok) throw mapProviderError("gemini", res.status, await res.text());
