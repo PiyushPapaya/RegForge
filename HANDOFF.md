@@ -102,10 +102,13 @@ v2 has two parts, both approved by the user:
   stage change. All respect `prefers-reduced-motion`. Calm CSS elsewhere.
 
 ### IMMEDIATE NEXT STEP
-Run the **writing-plans** skill on the v2 spec to produce
-`docs/superpowers/plans/2026-06-27-regforge-v2.md`, then execute it
-(subagent-driven-development was used for v1 and worked well: group tightly
-coupled tasks, rely on each task's TDD tests as the gate, review diffs).
+The v2 implementation plan is ALREADY WRITTEN:
+`docs/superpowers/plans/2026-06-27-regforge-v2.md` (17 tasks, TDD, bite-sized).
+**Just execute it** with subagent-driven-development (used for v1, worked well:
+work on branch `feat/regforge-v2`, group tightly coupled tasks, rely on each
+task's tests as the gate, review diffs). Task 1 creates the branch + installs
+`openai` and `framer-motion`. Task 17 ends with a live Gemini smoke test +
+merge via finishing-a-development-branch.
 
 ---
 
