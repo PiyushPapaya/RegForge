@@ -5,7 +5,7 @@ import { OpenAIProvider } from "@/lib/llm/openai";
 import { GeminiProvider } from "@/lib/llm/gemini";
 
 export interface ProviderRequest {
-  provider?: string;        // raw from request; validated here
+  provider?: ProviderName;  // validated at runtime; unknown strings caught by guard
   apiKey?: string;          // optional BYOK
 }
 
