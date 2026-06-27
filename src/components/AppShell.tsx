@@ -1,6 +1,9 @@
 // src/components/AppShell.tsx
 "use client";
+import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { loadGsap } from "@/lib/motion/gsap";
+import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Hero } from "@/components/Hero";
 import { Cockpit } from "@/components/Cockpit";
@@ -22,9 +25,22 @@ export function AppShell(props: {
   onChange: (m: RegisterMap) => void; onCite: (page: number) => void; onGenerate: () => void;
 }) {
   const inCockpit = props.map != null;
+  const glowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    let tween: { kill: () => void } | null = null;
+    loadGsap().then((gsap) => {
+      if (!gsap || !glowRef.current) return;
+      tween = gsap.to(glowRef.current, {
+        backgroundPosition: "60% 40%", scale: 1.06, opacity: 0.85,
+        duration: 8, yoyo: true, repeat: -1, ease: "sine.inOut",
+      });
+    });
+    return () => { tween?.kill(); };
+  }, []);
   return (
     <main className="min-h-screen">
-      <div className="glow" aria-hidden />
+      <div className="glow" aria-hidden ref={glowRef} />
       <SiteHeader
         stage={props.stage} substatus={props.busy ? props.status : undefined} inCockpit={inCockpit}
         provider={props.provider} apiKey={props.apiKey} onProvider={props.onProvider} onKey={props.onKey}
