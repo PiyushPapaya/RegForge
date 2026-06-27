@@ -30,7 +30,7 @@ export function DropTarget({ onFile, busy, status }: {
         isDragActive ? "border-[var(--accent)] bg-[rgba(61,220,145,0.06)]" : "border-[var(--border-bright)] bg-[var(--panel)]"
       }`}
     >
-      <input {...getInputProps()} />
+      <input {...getInputProps()} aria-label="Upload a datasheet PDF" />
       {/* traced gradient ring on idle, brighter on drag */}
       <span
         aria-hidden
@@ -43,10 +43,11 @@ export function DropTarget({ onFile, busy, status }: {
         }}
       />
       <motion.div
+        aria-hidden
         animate={{ y: isDragActive ? -4 : 0 }}
         className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border-bright)] bg-[var(--bg)] text-xl text-[var(--accent)] transition-transform group-hover:-translate-y-1"
       >↑</motion.div>
-      <div className="text-[var(--text)]">
+      <div className="text-step-1 text-[var(--text)]">
         {isDragActive ? "Release to extract" : "Drop a datasheet PDF, or click to browse"}
       </div>
       <div className="font-mono text-xs text-[var(--muted)]">PDF · up to ~25MB</div>

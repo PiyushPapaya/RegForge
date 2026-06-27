@@ -4,27 +4,48 @@ import { StageRail } from "@/components/StageRail";
 import { ProviderControl } from "@/components/ProviderControl";
 import type { Stage } from "@/lib/stages";
 import type { ProviderName } from "@/lib/llm/types";
+import type { ExtractPhase } from "@/app/page";
+
+const PHASE_LABEL: Record<Exclude<ExtractPhase, null>, string> = {
+  reading: "Reading datasheet…", extracting: "Extracting registers", validating: "Validating…",
+};
 
 export function SiteHeader({
-  stage, substatus, inCockpit, provider, apiKey, onProvider, onKey,
+  stage, substatus, inCockpit, busy, extractPhase, registersFound, provider, apiKey, onProvider, onKey,
 }: {
   stage: Stage; substatus?: string; inCockpit: boolean;
+  busy: boolean; extractPhase: ExtractPhase; registersFound: number;
   provider: ProviderName; apiKey: string;
   onProvider: (p: ProviderName) => void; onKey: (k: string) => void;
 }) {
+  const mobileStatus = busy && extractPhase
+    ? extractPhase === "extracting" && registersFound > 0
+      ? `Extracting registers · ${registersFound} found`
+      : PHASE_LABEL[extractPhase]
+    : null;
+
   return (
     <header
-      className={`sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 px-6 py-3 transition-colors ${
+      className={`sticky top-0 z-30 px-6 py-3 transition-colors ${
         inCockpit ? "border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur" : "border-b border-transparent"
       }`}
     >
-      <div className="flex items-center gap-6">
-        <span className="font-mono text-base font-semibold tracking-tight">
-          Reg<span className="gradient-text">Forge</span>
-        </span>
-        <div className="hidden sm:block"><StageRail current={stage} substatus={substatus} /></div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-6">
+          <span className="font-mono text-step-1 font-semibold tracking-tight">
+            Reg<span className="gradient-text">Forge</span>
+          </span>
+          <div className="hidden sm:block"><StageRail current={stage} substatus={substatus} /></div>
+        </div>
+        <ProviderControl provider={provider} apiKey={apiKey} onProvider={onProvider} onKey={onKey} />
       </div>
-      <ProviderControl provider={provider} apiKey={apiKey} onProvider={onProvider} onKey={onKey} />
+      {/* Mobile-only progress strip — the rail is hidden below sm, so phones would otherwise go dark. */}
+      {mobileStatus && (
+        <div className="mt-2 flex items-center gap-2 font-mono text-step--1 text-[var(--accent)] sm:hidden">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--accent)]" aria-hidden />
+          {mobileStatus}
+        </div>
+      )}
     </header>
   );
 }

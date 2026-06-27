@@ -14,17 +14,29 @@ export function ProviderControl({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     function onClick(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  // Move focus into the dialog on open; restore it to the trigger on close.
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+    else if (document.activeElement && ref.current?.contains(document.activeElement)) triggerRef.current?.focus();
+  }, [open]);
+
   return (
-    <div ref={ref} className="relative flex items-center gap-2 font-mono text-xs">
+    <div ref={ref} className="relative flex items-center gap-2 font-mono text-step--1"
+      onKeyDown={(e) => { if (e.key === "Escape" && open) { e.stopPropagation(); setOpen(false); } }}>
       <div className="panel flex items-center gap-2 px-2 py-1.5">
-        <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" aria-hidden />
+        <label htmlFor="provider-select" className="sr-only">LLM provider</label>
         <select
+          id="provider-select"
           value={provider}
           onChange={(e) => onProvider(e.target.value as ProviderName)}
           className="focusable cursor-pointer bg-transparent pr-1 text-[var(--text)] outline-none"
@@ -33,21 +45,26 @@ export function ProviderControl({
         </select>
       </div>
       <button
+        ref={triggerRef}
         className="focusable panel px-2 py-1.5 text-[var(--muted)] transition-colors hover:text-[var(--text)]"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
         aria-label="API key settings"
-      >⚙</button>
+      ><span aria-hidden>⚙</span></button>
       <AnimatePresence>
         {open && (
           <motion.div
+            role="dialog" aria-modal="false" aria-label="API key settings"
             initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16 }}
             className="panel absolute right-0 top-11 z-20 w-72 p-3"
           >
-            <label className="mb-1 block text-[var(--muted)]">Your {LABEL[provider]} API key (optional)</label>
+            <label htmlFor="api-key-input" className="mb-1 block text-[var(--muted)]">Your {LABEL[provider]} API key (optional)</label>
             <input
+              id="api-key-input" ref={inputRef}
               type="password" value={apiKey} onChange={(e) => onKey(e.target.value)}
               placeholder="Leave blank to use server default"
               className="focusable w-full rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1.5 text-[var(--text)] outline-none"

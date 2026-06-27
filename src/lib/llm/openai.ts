@@ -25,6 +25,23 @@ export class OpenAIProvider implements LLMProvider {
     });
     return res.choices[0]?.message?.content ?? "";
   }
+  async *extractFromPdfStream(pdf: Buffer, prompt: string): AsyncIterable<string> {
+    const content = [
+      { type: "text", text: prompt },
+      { type: "file", file: { filename: "datasheet.pdf", file_data: `data:application/pdf;base64,${pdf.toString("base64")}` } },
+    ];
+    const stream = await this.client.chat.completions.create({
+      model: MODEL,
+      max_tokens: 8000,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      messages: [{ role: "user", content: content as any }],
+      stream: true,
+    });
+    for await (const chunk of stream) {
+      const t = chunk.choices[0]?.delta?.content;
+      if (t) yield t;
+    }
+  }
   async reasonText(prompt: string): Promise<string> {
     const res = await this.client.chat.completions.create({
       model: MODEL, max_tokens: 4000, messages: [{ role: "user", content: prompt }],
