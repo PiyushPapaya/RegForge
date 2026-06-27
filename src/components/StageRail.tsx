@@ -28,7 +28,7 @@ export function StageRail({ current, substatus }: { current: Stage; substatus?: 
           {STAGES.map((s) => {
             const st = stageState(current, s);
             const dot =
-              st === "done" ? "bg-[var(--accent)] border-[var(--accent)]"
+              st === "done" ? "bg-[var(--done)] border-[var(--done)]"
               : st === "active" ? "bg-[var(--accent-bright)] border-[var(--accent-bright)]"
               : "bg-[var(--bg)] border-[var(--border)]";
             const txt =

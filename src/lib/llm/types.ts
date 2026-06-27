@@ -18,6 +18,11 @@ export interface LLMProvider {
   name: ProviderName;
   /** Send a PDF + prompt, return raw model text. */
   extractFromPdf(pdf: Buffer, prompt: string): Promise<string>;
+  /**
+   * Optional streaming variant: yields raw text deltas as the model emits them,
+   * so the route can report live progress. Falls back to extractFromPdf when absent.
+   */
+  extractFromPdfStream?(pdf: Buffer, prompt: string): AsyncIterable<string>;
   /** Text-only reasoning, return raw model text. */
   reasonText(prompt: string): Promise<string>;
 }
