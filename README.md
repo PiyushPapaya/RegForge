@@ -1,6 +1,8 @@
 # RegForge
 
-Drop an I²C/SPI sensor datasheet PDF and RegForge turns it into a working C driver. Claude reads the PDF and extracts a structured **register map**; you **verify and edit** that map inline (the trust checkpoint); then RegForge generates a C header (`<device>_regs.h`), a driver skeleton (`<device>.c` / `<device>.h`), and a **cited, ordered init sequence** — each step linked back to the datasheet page it came from.
+Drop an I²C/SPI sensor datasheet PDF and RegForge turns it into a working C driver. An LLM reads the PDF and extracts a structured **register map**; you **verify and edit** that map inline (the trust checkpoint); then RegForge generates a C header (`<device>_regs.h`), a driver skeleton (`<device>.c` / `<device>.h`), and a **cited, ordered init sequence** — each step linked back to the datasheet page it came from.
+
+The UI is a two-pane "cockpit": the source datasheet on the left, the work (register table → generated code) on the right, with a lit **Upload · Extract · Verify · Generate** stage rail across the top.
 
 It's tuned for clean, tabular sensor/peripheral chips (IMUs, temp sensors, RTCs, power monitors), not multi-chapter MCU reference manuals.
 
@@ -26,8 +28,23 @@ cp .env.local.example .env.local   # then fill in the values
 
 Environment variables (`.env.local`):
 
-- `ANTHROPIC_API_KEY` — **required**. Used server-side for PDF extraction and init-sequence reasoning.
+- **At least one provider key** — used server-side for PDF extraction and init-sequence reasoning (see **Providers** below):
+  - `GEMINI_API_KEY` — Google Gemini (`gemini-2.5-flash`), the **free** path.
+  - `ANTHROPIC_API_KEY` — Anthropic (`claude-sonnet-4-6`).
+  - `OPENAI_API_KEY` — OpenAI (`gpt-4o`), **paid**.
 - `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **optional**. Enable persistence and the example gallery. Without them the app still works end-to-end; the gallery simply stays empty.
+
+## Providers
+
+RegForge supports three LLM providers behind one interface (`src/lib/llm/`). Pick the active provider from the dropdown in the top-right of the UI.
+
+| Provider  | Model               | Notes                          |
+|-----------|---------------------|--------------------------------|
+| Gemini    | `gemini-2.5-flash`  | Free tier (low rate limits), native PDF — the recommended demo path. |
+| Anthropic | `claude-sonnet-4-6` | Native PDF reading.            |
+| OpenAI    | `gpt-4o`            | Paid; base64 PDF file part.    |
+
+**Key resolution** for each request is: your **bring-your-own-key** (if supplied) → the server's `.env` default → a friendly typed error. Open the **⚙** popover next to the provider dropdown to paste your own key; BYOK keys are **never stored or logged** and are sent only to the provider you chose for that one request.
 
 If using Supabase, apply the schema in `supabase/migrations/0001_init.sql` to your project. To seed the example gallery, run an extraction for a few chips, then mark their rows:
 
@@ -55,9 +72,11 @@ npm run build    # production build
 
 Single Next.js (App Router) app with two server "AI moments":
 
-- `POST /api/extract` — receives the PDF, calls Claude (native PDF reading), validates the reply against the Zod register-map schema (with one auto-retry), returns the map. API key stays server-side.
-- `POST /api/generate` — receives the **verified** map, runs deterministic templating for the header + driver (no hallucination), and a second Claude call for the init sequence (graceful degradation to raw `init_hints` on failure).
+- `POST /api/extract` — receives the PDF and `{ provider, apiKey? }`, resolves the chosen provider, has it read the PDF, validates the reply against the Zod register-map schema (with one auto-retry), returns the map. Keys stay server-side.
+- `POST /api/generate` — receives the **verified** map (plus `{ provider, apiKey? }`), runs deterministic templating for the header + driver (no hallucination), and a second provider call for the init sequence (graceful degradation to raw `init_hints` on failure).
+
+Both routes resolve the provider through `src/lib/llm/registry.ts`, which adapts each provider's `extractFromPdf` / `reasonText` methods onto the existing `TextCaller` / `InitCaller` seam — so `extractRegisterMap` and `buildInitSequence` are provider-agnostic and unchanged.
 
 The Zod schema in `src/lib/schema/registerMap.ts` is the contract between the two routes — generated C is only ever produced from a validated, user-verified map, so it is never silently wrong. Generated C comments and identifiers are sanitized (`src/lib/generate/sanitize.ts`) so extracted text can't break out of a comment or form an invalid macro.
 
-Tech: Next.js 16 · TypeScript · Tailwind v4 · Anthropic SDK (Claude) · Zod · Supabase · Vitest.
+Tech: Next.js 16 · TypeScript · Tailwind v4 · multi-provider LLM (Anthropic SDK · OpenAI SDK · Gemini REST) · shiki · framer-motion · Zod · Supabase · Vitest.
