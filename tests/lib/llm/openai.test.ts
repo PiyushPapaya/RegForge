@@ -13,8 +13,9 @@ describe("OpenAIProvider", () => {
     const arg = client.chat.completions.create.mock.calls[0][0];
     expect(arg.model).toBe("gpt-4o");
     const content = arg.messages[0].content;
-    expect(content.some((c: any) => c.type === "text" && c.text === "prompt")).toBe(true);
-    expect(content.some((c: any) => c.type === "file")).toBe(true);
+    type Part = { type: string; text?: string };
+    expect(content.some((c: Part) => c.type === "text" && c.text === "prompt")).toBe(true);
+    expect(content.some((c: Part) => c.type === "file")).toBe(true);
   });
   it("reasonText returns the message content", async () => {
     const client = fakeClient("STEPS");

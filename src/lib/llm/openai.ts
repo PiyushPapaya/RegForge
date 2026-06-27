@@ -11,19 +11,17 @@ export class OpenAIProvider implements LLMProvider {
     this.client = client ?? new OpenAI({ apiKey: key });
   }
   async extractFromPdf(pdf: Buffer, prompt: string): Promise<string> {
+    const content = [
+      { type: "text", text: prompt },
+      { type: "file", file: { filename: "datasheet.pdf", file_data: `data:application/pdf;base64,${pdf.toString("base64")}` } },
+    ];
     const res = await this.client.chat.completions.create({
       model: MODEL,
       max_tokens: 8000,
-      messages: [
-        {
-          role: "user",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          content: [
-            { type: "text", text: prompt },
-            { type: "file", file: { filename: "datasheet.pdf", file_data: `data:application/pdf;base64,${pdf.toString("base64")}` } },
-          ] as any,
-        },
-      ],
+      // OpenAI's typed content parts don't yet include "file"; payload shape is
+      // verified live in the smoke test (Task 17). Cast keeps it compiling.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      messages: [{ role: "user", content: content as any }],
     });
     return res.choices[0]?.message?.content ?? "";
   }

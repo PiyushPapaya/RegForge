@@ -14,8 +14,9 @@ describe("AnthropicProvider", () => {
     const arg = client.messages.create.mock.calls[0][0];
     expect(arg.model).toBe("claude-sonnet-4-6");
     const content = arg.messages[0].content;
-    expect(content.some((c: any) => c.type === "document")).toBe(true);
-    expect(content.some((c: any) => c.type === "text" && c.text === "prompt")).toBe(true);
+    type Block = { type: string; text?: string };
+    expect(content.some((c: Block) => c.type === "document")).toBe(true);
+    expect(content.some((c: Block) => c.type === "text" && c.text === "prompt")).toBe(true);
   });
   it("reasonText sends a plain text message", async () => {
     const client = fakeClient("STEPS");

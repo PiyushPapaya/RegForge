@@ -19,8 +19,9 @@ describe("GeminiProvider", () => {
     expect((init as RequestInit).headers).toMatchObject({ "x-goog-api-key": "KEY123" });
     const body = JSON.parse((init as RequestInit).body as string);
     const parts = body.contents[0].parts;
-    expect(parts.some((x: any) => x.inline_data?.mime_type === "application/pdf")).toBe(true);
-    expect(parts.some((x: any) => x.text === "do it")).toBe(true);
+    type Part = { inline_data?: { mime_type?: string }; text?: string };
+    expect(parts.some((x: Part) => x.inline_data?.mime_type === "application/pdf")).toBe(true);
+    expect(parts.some((x: Part) => x.text === "do it")).toBe(true);
   });
 
   it("reasonText sends a text-only request", async () => {
