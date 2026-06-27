@@ -3,7 +3,8 @@ import { RegisterMapSchema } from "@/lib/schema/registerMap";
 import { generateHeader } from "@/lib/generate/templateHeader";
 import { generateDriver } from "@/lib/generate/templateDriver";
 import { buildInitSequence } from "@/lib/generate/initSequence";
-import { makeClient, MODEL } from "@/types/anthropic";
+import { resolveProvider } from "@/lib/llm/registry";
+import { ProviderError } from "@/lib/llm/errors";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -20,15 +21,18 @@ export async function POST(req: NextRequest) {
   const header = generateHeader(map);
   const driver = generateDriver(map);
 
-  const client = makeClient();
-  const init = await buildInitSequence(map, async (prompt) => {
-    const msg = await client.messages.create({
-      model: MODEL, max_tokens: 4000,
-      messages: [{ role: "user", content: prompt }],
-    });
-    const b = msg.content.find((x) => x.type === "text");
-    return b && b.type === "text" ? b.text : "";
-  });
+  let llm;
+  try {
+    llm = resolveProvider({ provider: body?.provider, apiKey: body?.apiKey });
+  } catch (e) {
+    if (e instanceof ProviderError) {
+      return NextResponse.json({ error: e.userMessage }, { status: 400 });
+    }
+    throw e;
+  }
+
+  // buildInitSequence already degrades gracefully if the call throws.
+  const init = await buildInitSequence(map, (prompt) => llm.reasonText(prompt));
 
   return NextResponse.json({
     files: [

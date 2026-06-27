@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractRegisterMap } from "@/lib/extract/extractRegisterMap";
-import { makeClient, makePdfCaller } from "@/types/anthropic";
+import { resolveProvider } from "@/lib/llm/registry";
+import { ProviderError } from "@/lib/llm/errors";
 import { saveExtraction } from "@/lib/supabase/extractions";
 
 export const runtime = "nodejs";
@@ -17,20 +18,39 @@ export async function POST(req: NextRequest) {
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: "PDF too large (max ~25MB / ~120 pages)." }, { status: 413 });
   }
-  const pdf = Buffer.from(await file.arrayBuffer());
-  const caller = makePdfCaller(makeClient());
+  const provider = (form.get("provider") as string) || undefined;
+  const apiKey = (form.get("apiKey") as string) || undefined;
 
-  const result = await extractRegisterMap(pdf, caller);
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: 422 });
+  let llm;
+  try {
+    llm = resolveProvider({ provider, apiKey });
+  } catch (e) {
+    if (e instanceof ProviderError) {
+      return NextResponse.json({ error: e.userMessage }, { status: e.status === 401 ? 400 : e.status });
+    }
+    throw e;
   }
-  if (!result.map.device_detected) {
-    return NextResponse.json(
-      { error: "This doesn't look like a single-chip I2C/SPI sensor datasheet.", device_detected: false },
-      { status: 422 }
-    );
+
+  const pdf = Buffer.from(await file.arrayBuffer());
+  try {
+    // Adapt the provider to the existing TextCaller seam: (prompt, pdf) order.
+    const result = await extractRegisterMap(pdf, (prompt, p) => llm.extractFromPdf(p, prompt));
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 422 });
+    }
+    if (!result.map.device_detected) {
+      return NextResponse.json(
+        { error: "This doesn't look like a single-chip I2C/SPI sensor datasheet.", device_detected: false },
+        { status: 422 }
+      );
+    }
+    let id: string | null = null;
+    try { id = await saveExtraction(result.map); } catch { /* persistence is best-effort */ }
+    return NextResponse.json({ id, map: result.map });
+  } catch (e) {
+    if (e instanceof ProviderError) {
+      return NextResponse.json({ error: e.userMessage }, { status: e.status });
+    }
+    return NextResponse.json({ error: "Extraction failed unexpectedly." }, { status: 500 });
   }
-  let id: string | null = null;
-  try { id = await saveExtraction(result.map); } catch { /* persistence is best-effort */ }
-  return NextResponse.json({ id, map: result.map });
 }
