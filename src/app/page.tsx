@@ -1,13 +1,7 @@
+// src/app/page.tsx
 "use client";
 import { useState } from "react";
-import { StageRail } from "@/components/StageRail";
-import { ProviderControl } from "@/components/ProviderControl";
-import { Cockpit } from "@/components/Cockpit";
-import { SourcePane } from "@/components/SourcePane";
-import { RegisterTable } from "@/components/RegisterTable";
-import { OutputTabs } from "@/components/OutputTabs";
-import { Dropzone } from "@/components/Dropzone";
-import { ExampleGallery } from "@/components/ExampleGallery";
+import { AppShell } from "@/components/AppShell";
 import type { RegisterMap } from "@/lib/schema/registerMap";
 import type { InitResult } from "@/lib/generate/initSequence";
 import type { Stage } from "@/lib/stages";
@@ -25,12 +19,13 @@ export default function Home() {
   const [init, setInit] = useState<InitResult | null>(null);
   const [citePage, setCitePage] = useState<number | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | undefined>(undefined);
   const [provider, setProvider] = useState<ProviderName>("gemini");
   const [apiKey, setApiKey] = useState("");
 
   async function handleFile(f: File) {
     setBusy(true); setError(""); setStage("extract"); setStatus(`Reading ${f.name}…`);
-    setPdfUrl(URL.createObjectURL(f));
+    setPdfUrl(URL.createObjectURL(f)); setFileName(f.name);
     const fd = new FormData();
     fd.append("pdf", f); fd.append("provider", provider); if (apiKey) fd.append("apiKey", apiKey);
     try {
@@ -42,7 +37,10 @@ export default function Home() {
     finally { setBusy(false); }
   }
 
-  function loadExample(m: RegisterMap) { setMap(m); setStage("verify"); setPdfUrl(null); }
+  function loadExample(m: RegisterMap) {
+    setMap(m); setStage("verify"); setPdfUrl(null); setFileName(undefined);
+    setFiles([]); setInit(null);
+  }
 
   async function generate() {
     if (!map) return;
@@ -60,34 +58,12 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl p-6">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-6">
-          <h1 className="font-mono text-xl font-semibold tracking-tight">RegForge</h1>
-          <StageRail current={stage} substatus={busy ? status : undefined} />
-        </div>
-        <ProviderControl provider={provider} apiKey={apiKey} onProvider={setProvider} onKey={setApiKey} />
-      </header>
-      {error && <p className="mb-4 panel p-3 text-[var(--warn)]">{error}</p>}
-      <Cockpit
-        source={<SourcePane pdfUrl={pdfUrl} citePage={citePage} />}
-        work={
-          map ? (
-            stage === "generate" && files.length > 0
-              ? <OutputTabs files={files} init={init} />
-              : <div>
-                  <RegisterTable map={map} onChange={setMap} onCite={setCitePage} />
-                  <button className="mt-4 rounded bg-[var(--accent)] px-4 py-2 text-black disabled:opacity-50"
-                    onClick={generate} disabled={busy}>Generate Driver →</button>
-                </div>
-          ) : (
-            <div>
-              <Dropzone onFile={handleFile} busy={busy} status={status} />
-              <ExampleGallery onLoad={loadExample} />
-            </div>
-          )
-        }
-      />
-    </main>
+    <AppShell
+      stage={stage} map={map} busy={busy} status={status} error={error}
+      files={files} init={init} citePage={citePage} pdfUrl={pdfUrl} fileName={fileName}
+      provider={provider} apiKey={apiKey} onProvider={setProvider} onKey={setApiKey}
+      onFile={handleFile} onLoadExample={loadExample}
+      onChange={setMap} onCite={setCitePage} onGenerate={generate}
+    />
   );
 }
