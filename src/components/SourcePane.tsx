@@ -1,22 +1,29 @@
+// src/components/SourcePane.tsx
 "use client";
-import { Dropzone } from "@/components/Dropzone";
-import { ExampleGallery } from "@/components/ExampleGallery";
-import type { RegisterMap } from "@/lib/schema/registerMap";
 
-export function SourcePane({
-  pdfUrl, citePage, busy, status, onFile, onLoadExample,
-}: {
-  pdfUrl: string | null; citePage: number | null; busy: boolean; status: string;
-  onFile: (f: File) => void; onLoadExample: (m: RegisterMap) => void;
+export function SourcePane({ pdfUrl, citePage, fileName }: {
+  pdfUrl: string | null; citePage: number | null; fileName?: string;
 }) {
-  if (pdfUrl) {
-    const src = citePage ? `${pdfUrl}#page=${citePage}` : pdfUrl;
-    return <iframe key={citePage ?? 0} className="panel h-[70vh] w-full" src={src} title="datasheet" />;
-  }
   return (
-    <div>
-      <Dropzone onFile={onFile} busy={busy} status={status} />
-      <ExampleGallery onLoad={onLoadExample} />
+    <div className="panel flex h-[72vh] flex-col overflow-hidden">
+      <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2 font-mono text-xs text-[var(--muted)]">
+        <span>{fileName ? `source · ${fileName}` : "source"}</span>
+        {citePage && <span className="text-[var(--link)]">page {citePage}</span>}
+      </div>
+      {pdfUrl ? (
+        <iframe
+          key={citePage ?? 0}
+          className="h-full w-full bg-[var(--bg)]"
+          src={citePage ? `${pdfUrl}#page=${citePage}` : pdfUrl}
+          title="datasheet"
+        />
+      ) : (
+        <div className="flex h-full flex-col items-center justify-center gap-2 text-center font-mono text-xs text-[var(--muted)]">
+          <span className="text-2xl">▦</span>
+          <span>No PDF for this example.</span>
+          <span>Citations reference the original datasheet pages.</span>
+        </div>
+      )}
     </div>
   );
 }

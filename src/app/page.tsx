@@ -6,6 +6,8 @@ import { Cockpit } from "@/components/Cockpit";
 import { SourcePane } from "@/components/SourcePane";
 import { RegisterTable } from "@/components/RegisterTable";
 import { OutputTabs } from "@/components/OutputTabs";
+import { Dropzone } from "@/components/Dropzone";
+import { ExampleGallery } from "@/components/ExampleGallery";
 import type { RegisterMap } from "@/lib/schema/registerMap";
 import type { InitResult } from "@/lib/generate/initSequence";
 import type { Stage } from "@/lib/stages";
@@ -68,7 +70,7 @@ export default function Home() {
       </header>
       {error && <p className="mb-4 panel p-3 text-[var(--warn)]">{error}</p>}
       <Cockpit
-        source={<SourcePane pdfUrl={pdfUrl} citePage={citePage} busy={busy} status={status} onFile={handleFile} onLoadExample={loadExample} />}
+        source={<SourcePane pdfUrl={pdfUrl} citePage={citePage} />}
         work={
           map ? (
             stage === "generate" && files.length > 0
@@ -78,7 +80,12 @@ export default function Home() {
                   <button className="mt-4 rounded bg-[var(--accent)] px-4 py-2 text-black disabled:opacity-50"
                     onClick={generate} disabled={busy}>Generate Driver →</button>
                 </div>
-          ) : <div className="text-[var(--muted)] text-sm">Drop a datasheet to begin.</div>
+          ) : (
+            <div>
+              <Dropzone onFile={handleFile} busy={busy} status={status} />
+              <ExampleGallery onLoad={loadExample} />
+            </div>
+          )
         }
       />
     </main>
