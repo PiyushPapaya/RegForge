@@ -2,6 +2,7 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { ChevronRightIcon } from "@/components/icons";
 
 export function Cockpit({ source, work, citePage }: {
   source: React.ReactNode; work: React.ReactNode; citePage?: number | null;
@@ -23,10 +24,10 @@ export function Cockpit({ source, work, citePage }: {
           onClick={() => setOverride(!showSource)}
           aria-expanded={showSource}
           aria-controls="source-pane"
-          className="focusable panel-recessed mb-2 flex w-full items-center justify-between px-3 py-2 font-mono text-step--1 text-[var(--muted-strong)] lg:hidden"
+          className="focusable panel-recessed mb-2 flex w-full cursor-pointer items-center justify-between px-3 py-2.5 font-mono text-step--1 text-[var(--muted-strong)] lg:hidden"
         >
           <span>{showSource ? "Hide datasheet source" : "View datasheet source"}</span>
-          <span className={`transition-transform ${showSource ? "rotate-90" : ""}`}>▸</span>
+          <ChevronRightIcon className={`transition-transform ${showSource ? "rotate-90" : ""}`} style={{ fontSize: "1rem" }} />
         </button>
         <div
           id="source-pane"

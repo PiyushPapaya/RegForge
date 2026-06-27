@@ -13,9 +13,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://reg-forge.vercel.app";
+const DESCRIPTION =
+  "Drop a sensor datasheet PDF. RegForge extracts a verified register map, you correct anything the model got wrong, then it generates a header, driver skeleton, and a page-cited init sequence — from deterministic templates, never hallucinated.";
+
 export const metadata: Metadata = {
-  title: "RegForge — datasheet → C driver",
-  description: "Turn a sensor datasheet PDF into a working, cited C driver.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "RegForge — datasheet → C driver",
+    template: "%s · RegForge",
+  },
+  description: DESCRIPTION,
+  applicationName: "RegForge",
+  authors: [{ name: "Piyush Nagpal" }],
+  keywords: ["embedded", "firmware", "C driver", "datasheet", "register map", "I2C", "SPI", "code generation"],
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "RegForge",
+    title: "RegForge — datasheet → C driver",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RegForge — datasheet → C driver",
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

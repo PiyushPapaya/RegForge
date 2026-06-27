@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, type HTMLMotionProps } from "framer-motion";
+import { UploadIcon } from "@/components/icons";
 
 export function DropTarget({ onFile, busy, status }: {
   onFile: (f: File) => void; busy: boolean; status: string;
@@ -45,8 +46,8 @@ export function DropTarget({ onFile, busy, status }: {
       <motion.div
         aria-hidden
         animate={{ y: isDragActive ? -4 : 0 }}
-        className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border-bright)] bg-[var(--bg)] text-xl text-[var(--accent)] transition-transform group-hover:-translate-y-1"
-      >↑</motion.div>
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border-bright)] bg-[var(--bg)] text-[var(--accent)] transition-transform group-hover:-translate-y-1"
+      ><UploadIcon style={{ fontSize: "1.25rem" }} /></motion.div>
       <div className="text-step-1 text-[var(--text)]">
         {isDragActive ? "Release to extract" : "Drop a datasheet PDF, or click to browse"}
       </div>

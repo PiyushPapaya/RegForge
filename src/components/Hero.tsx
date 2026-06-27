@@ -5,6 +5,7 @@ import { DropTarget } from "@/components/DropTarget";
 import { ExtractProgress } from "@/components/ExtractProgress";
 import { ExampleChips } from "@/components/ExampleChips";
 import { HeroPreview } from "@/components/HeroPreview";
+import { ShieldCheckIcon } from "@/components/icons";
 import { staggerContainer, riseIn } from "@/lib/motion/variants";
 import type { RegisterMap } from "@/lib/schema/registerMap";
 import type { ExtractPhase } from "@/app/page";
@@ -24,7 +25,7 @@ export function Hero({ busy, status, extractPhase, registersFound, onFile, onLoa
           Datasheet → C Driver
         </motion.p>
         <motion.h1 variants={riseIn} className="max-w-2xl text-balance text-step-5 font-semibold tracking-tight">
-          Turn a sensor datasheet into a <span className="gradient-text">working C driver</span>.
+          Turn a sensor datasheet into a <span className="text-[var(--accent)]">working C driver</span>.
         </motion.h1>
         <motion.p variants={riseIn} className="max-w-xl text-step-1 text-[var(--muted)]">
           Drop a PDF. RegForge extracts a verified register map, then generates the header, driver, and a cited init sequence.
@@ -40,6 +41,11 @@ export function Hero({ busy, status, extractPhase, registersFound, onFile, onLoa
         <motion.div variants={riseIn} className="flex flex-wrap justify-center gap-x-6 gap-y-1 font-mono text-step--1 text-[var(--muted)] lg:justify-start">
           <span>4 layers generated</span><span aria-hidden>·</span><span>cited to the page</span><span aria-hidden>·</span><span>schema-validated</span>
         </motion.div>
+        <motion.p variants={riseIn} className="flex max-w-md items-start gap-2 text-step--1 text-[var(--muted)]">
+          <ShieldCheckIcon className="mt-0.5 shrink-0 text-[var(--accent)]" style={{ fontSize: "1rem" }} />
+          <span>You verify the extracted register map before anything is generated. Code is built from
+          deterministic templates — never hallucinated — and every line cites its datasheet page.</span>
+        </motion.p>
       </div>
 
       {/* Right: the living artifact — proof, not promise. Hidden on small screens. */}

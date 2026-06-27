@@ -114,13 +114,6 @@ body {
   box-shadow: var(--shadow-1);
 }
 
-.gradient-text {
-  background: linear-gradient(90deg, var(--accent), var(--link));
-  -webkit-background-clip: text;
-          background-clip: text;
-  color: transparent;
-}
-
 .focusable:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;

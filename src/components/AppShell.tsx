@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { loadGsap } from "@/lib/motion/gsap";
 import { prefersReducedMotion } from "@/lib/motion/reducedMotion";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { Hero } from "@/components/Hero";
 import { Cockpit } from "@/components/Cockpit";
 import { SourcePane } from "@/components/SourcePane";
@@ -77,6 +78,7 @@ export function AppShell(props: {
             <Hero busy={props.busy} status={props.status}
               extractPhase={props.extractPhase} registersFound={props.registersFound}
               onFile={props.onFile} onLoadExample={props.onLoadExample} />
+            <SiteFooter />
           </motion.div>
         ) : (
           <Cockpit key="cockpit" citePage={props.citePage}

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PROVIDER_NAMES, type ProviderName } from "@/lib/llm/types";
+import { SlidersIcon } from "@/components/icons";
 
 const LABEL: Record<ProviderName, string> = { anthropic: "Anthropic", openai: "OpenAI (paid)", gemini: "Gemini (free)" };
 
@@ -46,12 +47,12 @@ export function ProviderControl({
       </div>
       <button
         ref={triggerRef}
-        className="focusable panel px-2 py-1.5 text-[var(--muted)] transition-colors hover:text-[var(--text)]"
+        className="focusable panel flex cursor-pointer items-center px-2 py-1.5 text-[var(--muted)] transition-colors hover:text-[var(--text)]"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label="API key settings"
-      ><span aria-hidden>⚙</span></button>
+      ><SlidersIcon style={{ fontSize: "0.95rem" }} /></button>
       <AnimatePresence>
         {open && (
           <motion.div

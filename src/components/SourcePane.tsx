@@ -1,5 +1,6 @@
 // src/components/SourcePane.tsx
 "use client";
+import { FileTextIcon } from "@/components/icons";
 
 export function SourcePane({ pdfUrl, citePage, fileName }: {
   pdfUrl: string | null; citePage: number | null; fileName?: string;
@@ -20,10 +21,10 @@ export function SourcePane({ pdfUrl, citePage, fileName }: {
           title="datasheet source viewer"
         />
       ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-2 text-center font-mono text-step--1 text-[var(--muted)]">
-          <span className="text-2xl" aria-hidden>▦</span>
-          <span>No PDF for this example.</span>
-          <span>Citations reference the original datasheet pages.</span>
+        <div className="flex h-full flex-col items-center justify-center gap-2.5 px-6 text-center font-mono text-step--1 text-[var(--muted)]">
+          <FileTextIcon className="text-[var(--muted)]" style={{ fontSize: "1.75rem" }} />
+          <span className="text-[var(--muted-strong)]">No PDF for this example</span>
+          <span>Citations still reference the original datasheet pages.</span>
         </div>
       )}
     </div>
