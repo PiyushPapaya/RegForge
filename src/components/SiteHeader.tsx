@@ -1,5 +1,6 @@
 // src/components/SiteHeader.tsx
 "use client";
+import Link from "next/link";
 import { StageRail } from "@/components/StageRail";
 import { ProviderControl } from "@/components/ProviderControl";
 import type { Stage } from "@/lib/stages";
@@ -32,9 +33,13 @@ export function SiteHeader({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-6">
-          <span className="font-mono text-step-1 font-semibold tracking-tight">
-            Reg<span className="gradient-text">Forge</span>
-          </span>
+          <Link href="/" className="focusable group flex items-center gap-2.5 rounded" aria-label="RegForge home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.svg" alt="" width={22} height={22} className="rounded-[5px]" />
+            <span className="font-mono text-step-1 font-semibold tracking-tight text-[var(--text)]">
+              Reg<span className="text-[var(--accent)]">Forge</span>
+            </span>
+          </Link>
           <div className="hidden sm:block"><StageRail current={stage} substatus={substatus} /></div>
         </div>
         <ProviderControl provider={provider} apiKey={apiKey} onProvider={onProvider} onKey={onKey} />

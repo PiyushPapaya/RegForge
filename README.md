@@ -1,82 +1,210 @@
+<div align="center">
+
+<img src="src/app/icon.svg" width="60" alt="RegForge logo" />
+
 # RegForge
 
-Drop an I²C/SPI sensor datasheet PDF and RegForge turns it into a working C driver. An LLM reads the PDF and extracts a structured **register map**; you **verify and edit** that map inline (the trust checkpoint); then RegForge generates a C header (`<device>_regs.h`), a driver skeleton (`<device>.c` / `<device>.h`), and a **cited, ordered init sequence** — each step linked back to the datasheet page it came from.
+**Turn a sensor datasheet PDF into a verified register map and a working, page-cited C driver.**
 
-The UI is a two-pane "cockpit": the source datasheet on the left, the work (register table → generated code) on the right, with a lit **Upload · Extract · Verify · Generate** stage rail across the top.
+[![Live Demo](https://img.shields.io/badge/Live_Demo-reg--forge.vercel.app-3ddc91?style=flat-square)](https://reg-forge.vercel.app)
+&nbsp;
+![Next.js 16](https://img.shields.io/badge/Next.js-16-000?style=flat-square&logo=nextdotjs)
+![React 19](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript)
+![Tailwind v4](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=flat-square&logo=tailwindcss)
+![Tests](https://img.shields.io/badge/tests-50_passing-3ddc91?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-8b97a3?style=flat-square)
 
-It's tuned for clean, tabular sensor/peripheral chips (IMUs, temp sensors, RTCs, power monitors), not multi-chapter MCU reference manuals.
+[**Live demo →**](https://reg-forge.vercel.app)
 
-## The 4 stages
+</div>
 
-1. **Upload** — drop a datasheet PDF (or pick a pre-extracted example).
-2. **Extract** — Claude reads the PDF and returns a strict, schema-validated register-map JSON.
-3. **Verify (the checkpoint)** — review the editable register table; expand rows to see bitfields; click a 📄 citation to preview the source page. Fix anything before generating.
-4. **Generate** — four layers appear as tabs:
-   - **Register map** — the structured table.
-   - **C header** (`<device>_regs.h`) — `#define`s for addresses + bitfield masks/shifts.
-   - **Driver skeleton** (`<device>.c` / `.h`) — typed read/write helpers, `<device>_init()`, HAL hooks.
-   - **Init sequence** — ordered power-on steps, each with its datasheet citation.
+<br/>
 
-   Copy any file, or **Download .zip** to grab them all.
+<img src="docs/media/hero-desktop.png" alt="RegForge landing page" width="100%" />
 
-## Setup
+<br/>
+
+RegForge reads an I²C/SPI sensor datasheet with an LLM and extracts a **structured register
+map**. You **verify and edit** that map inline — the trust checkpoint — and then RegForge
+generates a C header, a driver skeleton, and a **cited, ordered init sequence**, each step
+linked back to the datasheet page it came from. The generated code comes from **deterministic
+templates**, not the model, so it's never hallucinated.
+
+It's tuned for clean, tabular sensor/peripheral chips — IMUs, temperature sensors, RTCs, power
+monitors — not multi-chapter MCU reference manuals.
+
+---
+
+## Why it's interesting
+
+- **🔴 Live streaming extraction.** Extraction can take up to two minutes, so the server streams
+  Server-Sent Events and registers appear in the table as the model finds them — with a phase
+  stepper, a live count, and an elapsed timer. No silent spinner.
+- **🛡️ Deterministic, schema-validated code generation.** The LLM only ever produces a register
+  map, validated against a strict [Zod schema](src/lib/schema/registerMap.ts). All C output is
+  built from pure [template functions](src/lib/generate/) — so the code is reproducible and the
+  model can't invent registers or values.
+- **📄 Every line is cited.** Each register and init step links back to the datasheet page it came
+  from; clicking a citation scrolls the source PDF to that page.
+- **🔌 Multi-provider + BYOK.** Anthropic, OpenAI, and Gemini behind a single interface. Bring your
+  own key (never stored or logged) or use the server default.
+- **♿ Accessible & responsive.** Real `tablist`/`tabpanel` semantics, `aria-live` narration of the
+  extraction, keyboard generation (`⌘/Ctrl+Enter`), reduced-motion support, and a mobile layout
+  that adapts rather than amputates.
+- **✅ Tested.** 50 unit tests cover the schema contract, sanitization, template generation, and the
+  extraction retry path. `tsc` strict, ESLint clean.
+
+---
+
+## See it work
+
+| Verify the extracted map | Generate cited C |
+|---|---|
+| <img src="docs/media/cockpit-verify.png" alt="Register table beside the source datasheet" /> | <img src="docs/media/cockpit-code.png" alt="Generated C header with brand syntax theme" /> |
+
+| Live streaming extraction | Mobile |
+|---|---|
+| <img src="docs/media/extract-progress.png" alt="Streaming extraction progress card" /> | <img src="docs/media/hero-mobile.png" alt="Responsive mobile layout" width="280" /> |
+
+> The screenshots above are a real run against the [TI TMP117](https://www.ti.com/product/TMP117)
+> temperature-sensor datasheet.
+
+---
+
+## How it works
+
+```
+          ┌─────────────┐   PDF + prompt    ┌──────────────┐
+ Upload → │   /extract  │ ────────────────► │  LLM (stream)│
+          └─────────────┘                   └──────┬───────┘
+                 │  SSE: phase + registersFound     │ raw JSON
+                 ▼                                   ▼
+          ┌─────────────┐   strict parse     ┌──────────────┐
+          │  Register   │ ◄───────────────── │  Zod schema  │
+          │    table    │   (verify + edit)  │  validation  │
+          └──────┬──────┘                    └──────────────┘
+                 │ verified map
+                 ▼
+          ┌─────────────┐   deterministic    ┌──────────────┐
+ Generate→│  /generate  │ ────────────────►  │  C templates │ → _regs.h
+          └─────────────┘   (no LLM codegen) │  + init seq  │ → .c / .h
+                                             └──────────────┘ → init sequence
+```
+
+**The trust model:** the LLM is confined to *reading* the datasheet into a validated data
+structure. A human verifies it. Code is then generated by deterministic functions and cited back
+to the source. The model never writes the C.
+
+The four stages — **Upload · Extract · Verify · Generate** — are tracked by the lit stage rail
+across the top of the UI.
+
+---
+
+## Tech stack
+
+| Area | Choice |
+|------|--------|
+| Framework | Next.js 16 (App Router, Turbopack), React 19 |
+| Language | TypeScript (strict) |
+| Styling | Tailwind CSS v4, custom design tokens |
+| Motion | Framer Motion + GSAP, all `prefers-reduced-motion`-guarded |
+| LLM | Anthropic / OpenAI / Gemini behind one interface |
+| Validation | Zod |
+| Syntax highlighting | Shiki (custom brand theme, lazy-loaded) |
+| Persistence (optional) | Supabase |
+| Testing | Vitest |
+
+---
+
+## Getting started
 
 ```bash
 npm install
 cp .env.local.example .env.local   # then fill in the values
+npm run dev                        # http://localhost:3000
 ```
 
-Environment variables (`.env.local`):
+**Environment variables** (`.env.local`):
 
-- **At least one provider key** — used server-side for PDF extraction and init-sequence reasoning (see **Providers** below):
+- **At least one provider key** (used server-side for extraction and init-sequence reasoning):
   - `GEMINI_API_KEY` — Google Gemini (`gemini-2.5-flash`), the **free** path.
   - `ANTHROPIC_API_KEY` — Anthropic (`claude-sonnet-4-6`).
   - `OPENAI_API_KEY` — OpenAI (`gpt-4o`), **paid**.
-- `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **optional**. Enable persistence and the example gallery. Without them the app still works end-to-end; the gallery simply stays empty.
+- `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` —
+  **optional.** Enable persistence and the example gallery. Without them the app still works
+  end-to-end; the gallery simply stays empty.
 
-## Providers
+### Providers
 
-RegForge supports three LLM providers behind one interface (`src/lib/llm/`). Pick the active provider from the dropdown in the top-right of the UI.
+Pick the active provider from the dropdown in the top-right. Key resolution per request is:
+**your BYOK key** (if supplied) → the server's `.env` default → a friendly typed error. Open the
+settings popover next to the dropdown to paste your own key; BYOK keys are **never stored or
+logged** and are sent only to the provider you chose for that one request.
 
-| Provider  | Model               | Notes                          |
-|-----------|---------------------|--------------------------------|
-| Gemini    | `gemini-2.5-flash`  | Free tier (low rate limits), native PDF — the recommended demo path. |
-| Anthropic | `claude-sonnet-4-6` | Native PDF reading.            |
-| OpenAI    | `gpt-4o`            | Paid; base64 PDF file part.    |
+| Provider  | Model               | Notes                                   |
+|-----------|---------------------|-----------------------------------------|
+| Gemini    | `gemini-2.5-flash`  | Free tier, native PDF — the demo path.  |
+| Anthropic | `claude-sonnet-4-6` | Native PDF reading.                     |
+| OpenAI    | `gpt-4o`            | Paid; base64 PDF file part.             |
 
-**Key resolution** for each request is: your **bring-your-own-key** (if supplied) → the server's `.env` default → a friendly typed error. Open the **⚙** popover next to the provider dropdown to paste your own key; BYOK keys are **never stored or logged** and are sent only to the provider you chose for that one request.
+### Optional: Supabase example gallery
 
-If using Supabase, apply the schema in `supabase/migrations/0001_init.sql` to your project. To seed the example gallery, run an extraction for a few chips, then mark their rows:
+Apply the schema in `supabase/migrations/0001_init.sql`, then run a few extractions and mark them
+as examples:
 
 ```sql
-update extractions set is_example = true where device_name in ('BMI270','TMP117','DS3231');
+update extractions set is_example = true
+where device_name in ('BMI270', 'TMP117', 'DS3231');
 ```
 
-## Run
+---
+
+## Scripts
 
 ```bash
-npm run dev      # http://localhost:3000
-npm run test     # vitest suite
+npm run dev      # dev server (Turbopack)
 npm run build    # production build
+npm run test     # vitest suite (50 tests)
+npm run lint     # eslint
 ```
 
-## Demo script
+---
 
-1. Drop a sensor datasheet (e.g. a BMI270).
-2. Review the register table; click a 📄 citation to confirm an address against the source page.
-3. Click **Generate Driver →**.
-4. Switch tabs to view `<device>_regs.h`, the driver skeleton, and the init sequence.
-5. **Download .zip**.
+## Project structure
 
-## Architecture
+```
+src/
+├─ app/
+│  ├─ api/extract/      # SSE streaming extraction route
+│  ├─ api/generate/     # deterministic C generation route
+│  ├─ opengraph-image   # branded social card
+│  └─ page.tsx          # client state machine (stage, map, files)
+├─ components/          # AppShell, Cockpit, RegisterTable, CodeViewer, …
+└─ lib/
+   ├─ schema/           # the Zod register-map contract
+   ├─ extract/          # PDF → validated map (with one retry)
+   ├─ generate/         # map → C header / driver / init sequence (deterministic)
+   ├─ llm/              # multi-provider abstraction (+ streaming seam)
+   └─ motion/           # GSAP loader, variants, reduced-motion hook
+```
 
-Single Next.js (App Router) app with two server "AI moments":
+---
 
-- `POST /api/extract` — receives the PDF and `{ provider, apiKey? }`, resolves the chosen provider, has it read the PDF, validates the reply against the Zod register-map schema (with one auto-retry), returns the map. Keys stay server-side.
-- `POST /api/generate` — receives the **verified** map (plus `{ provider, apiKey? }`), runs deterministic templating for the header + driver (no hallucination), and a second provider call for the init sequence (graceful degradation to raw `init_hints` on failure).
+## Status & roadmap
 
-Both routes resolve the provider through `src/lib/llm/registry.ts`, which adapts each provider's `extractFromPdf` / `reasonText` methods onto the existing `TextCaller` / `InitCaller` seam — so `extractRegisterMap` and `buildInitSequence` are provider-agnostic and unchanged.
+RegForge is a working demo, deployed and tested. Possible next steps:
 
-The Zod schema in `src/lib/schema/registerMap.ts` is the contract between the two routes — generated C is only ever produced from a validated, user-verified map, so it is never silently wrong. Generated C comments and identifiers are sanitized (`src/lib/generate/sanitize.ts`) so extracted text can't break out of a comment or form an invalid macro.
+- Wider chip coverage (multi-bank register files, paged maps).
+- Per-field confidence surfaced from the model.
+- More target languages (Rust `embedded-hal`, MicroPython).
 
-Tech: Next.js 16 · TypeScript · Tailwind v4 · multi-provider LLM (Anthropic SDK · OpenAI SDK · Gemini REST) · shiki · framer-motion · Zod · Supabase · Vitest.
+---
+
+## License
+
+[MIT](LICENSE) © Piyush Nagpal
+
+<div align="center">
+<sub>Built with Next.js · <a href="https://reg-forge.vercel.app">reg-forge.vercel.app</a></sub>
+</div>

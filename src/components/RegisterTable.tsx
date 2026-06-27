@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { rowDelay } from "@/lib/motion/variants";
 import { useReducedMotion } from "@/lib/motion/reducedMotion";
+import { ChevronRightIcon } from "@/components/icons";
 import type { RegisterMap, Register } from "@/lib/schema/registerMap";
 
 const ACCESS = ["RW", "RO", "WO"] as const;
@@ -67,9 +68,9 @@ export function RegisterTable({ map, onChange, onCite }: {
                 aria-expanded={isOpen}
                 aria-controls={`fields-${i}`}
                 aria-label={`${isOpen ? "Hide" : "Show"} bitfields for ${r.name}`}
-                className="focusable -ml-1 flex h-4 w-4 shrink-0 items-center justify-center rounded text-[var(--muted)] transition-colors hover:text-[var(--text)]"
+                className="focusable -ml-1 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-[var(--muted)] transition-colors hover:text-[var(--text)]"
               >
-                <span className={`transition-transform ${isOpen ? "rotate-90" : ""}`}>▸</span>
+                <ChevronRightIcon className={`transition-transform ${isOpen ? "rotate-90" : ""}`} style={{ fontSize: "0.9rem" }} />
               </button>
             ) : (
               <span className="h-4 w-4 shrink-0" aria-hidden />
