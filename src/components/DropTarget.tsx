@@ -1,9 +1,8 @@
 // src/components/DropTarget.tsx
 "use client";
 import { useCallback } from "react";
-import type React from "react";
 import { useDropzone } from "react-dropzone";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 
 export function DropTarget({ onFile, busy, status }: {
   onFile: (f: File) => void; busy: boolean; status: string;
@@ -24,7 +23,7 @@ export function DropTarget({ onFile, busy, status }: {
 
   return (
     <motion.div
-      {...(getRootProps() as any)}
+      {...(getRootProps() as unknown as HTMLMotionProps<"div">)}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       className={`focusable group relative flex h-72 w-full max-w-xl cursor-pointer flex-col items-center justify-center gap-3 overflow-hidden rounded-xl border text-center transition-colors ${
